@@ -9,7 +9,7 @@
 
 import { TRPCError, initTRPC } from "@trpc/server";
 import superjson from "superjson";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
@@ -57,6 +57,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 	},
 });
 
+
 /**
  * Create a server-side caller.
  *
@@ -76,7 +77,36 @@ export const createCallerFactory = t.createCallerFactory;
  *
  * @see https://trpc.io/docs/router
  */
-export const createTRPCRouter = t.router;
+export const createTRPCRouter = t.router({
+	getUser: t.procedure.query(async ()=> {
+		return db.user.findMany();
+	}),
+	createUser: t.procedure.input(z.object({
+		email: z.string(),
+		password: z.string(),
+		username: z.string(),
+		firstName: z.string(),
+		lastName: z.string(),
+		gender: z.string(),
+		sexualPreference: z.string(),
+		biography: z.string(),
+	})).mutation(async ({input}) => {
+		return db.user.create({
+			data: {
+				email: input.email,
+				password: input.password,
+				username: input.username,
+				firstName: input.firstName,
+				lastName: input.lastName,
+				gender: input.gender,
+				sexualPreference: input.sexualPreference,
+				biography: input.biography,
+			}
+		})
+	})
+});
+
+export type createTRPCRouter = typeof createTRPCRouter;
 
 /**
  * Middleware for timing procedure execution and adding an artificial delay in development.
