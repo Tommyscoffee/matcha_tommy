@@ -17,6 +17,18 @@ export const env = createEnv({
 		NODE_ENV: z
 			.enum(["development", "test", "production"])
 			.default("development"),
+		DB_HOST_LOCAL: process.env.NODE_ENV === "production"
+			? z.string()
+			: z.string().default("localhost"),
+		DB_USER: process.env.NODE_ENV === "production"
+			? z.string()
+			: z.string().default("root"),
+		DB_PASSWORD: process.env.NODE_ENV === "production"
+			? z.string()
+			: z.string().default("password"),
+		DB_NAME: process.env.NODE_ENV === "production"
+			? z.string()
+			: z.string().default("matcha_db"),
 	},
 
 	/**
@@ -38,12 +50,16 @@ export const env = createEnv({
 		AUTH_DISCORD_SECRET: process.env.AUTH_DISCORD_SECRET,
 		DATABASE_URL: process.env.DATABASE_URL,
 		NODE_ENV: process.env.NODE_ENV,
+		DB_HOST_LOCAL: process.env.DB_HOST_LOCAL,
+		DB_USER: process.env.DB_USER,
+		DB_PASSWORD: process.env.DB_PASSWORD,
+		DB_NAME: process.env.DB_NAME,
 	},
 	/**
 	 * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
 	 * useful for Docker builds.
 	 */
-	skipValidation: !!process.env.SKIP_ENV_VALIDATION,
+	skipValidation: process.env.NODE_ENV === "development" || !!process.env.SKIP_ENV_VALIDATION,
 	/**
 	 * Makes it so that empty strings are treated as undefined. `SOME_VAR: z.string()` and
 	 * `SOME_VAR=''` will throw an error.

@@ -1,17 +1,48 @@
-import { PrismaClient } from "@prisma/client";
+import { env } from "~/src/env";
+import mysql from "mysql2/promise";
 
-import { env } from "~/env";
-
-const createPrismaClient = () =>
-	new PrismaClient({
-		log:
-			env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+/**
+ * DB接続作成関数
+ * DB操作時に接続、クローズをする
+ * @returns MySQLの接続オブジェクト
+ */
+export const createConnection = async () => {
+	const connection = await mysql.createConnection({
+		host: env.DB_HOST_LOCAL,
+		user: env.DB_USER,
+		password: env.DB_PASSWORD,
+		database: env.DB_NAME,
 	});
-
-const globalForPrisma = globalThis as unknown as {
-	prisma: ReturnType<typeof createPrismaClient> | undefined;
+	return connection;
 };
 
-export const db = globalForPrisma.prisma ?? createPrismaClient();
+/**
+ * DB接続を閉じる関数
+ * @param connection 閉じる接続オブジェクト
+ */
+export const closeConnection = async (connection: mysql.Connection) => {
+	await connection.end();
+};
 
-if (env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+/**
+ * クエリを実行する関数
+ * @param query SQLクエリ
+ * @param params クエリパラメータ
+ * @returns クエリの結果
+ */
+export const executeQuery = async <T>(query: string, params?: any[]): Promise<T> => {
+	const connection = await createConnection();
+	try {
+		const [results] = await connection.execute(query, params);
+		return results as T;
+	} finally {
+		await closeConnection(connection);
+	}
+};
+
+// データベース操作のエクスポート
+export const db = {
+	query: executeQuery,
+	createConnection,
+	closeConnection,
+};

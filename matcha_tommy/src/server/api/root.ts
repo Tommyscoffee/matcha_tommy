@@ -1,23 +1,15 @@
-import { postRouter } from "~/server/api/routers/post";
-import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
+import { postRouter } from "~/src/server/api/routers/post";
+import { createCallerFactory, createTRPCRouter } from "~/src/server/api/trpc";
 
-/**
- * This is the primary router for your server.
- *
- * All routers added in /api/routers should be manually added here.
- */
+// /api/routersディレクトリに定義された個別のルーター（この場合はpostRouter）をまとめる
 export const appRouter = createTRPCRouter({
 	post: postRouter,
-});
-
-// export type definition of API
-export type AppRouter = typeof appRouter;
-
-/**
- * Create a server-side caller for the tRPC API.
- * @example
- * const trpc = createCaller(createContext);
- * const res = await trpc.post.all();
- *       ^? Post[]
- */
-export const createCaller = createCallerFactory(appRouter);
+	// 将来的に新しいSub Routerを追加する場合、ここに追加します
+  });
+  
+  // APIの型定義をエクスポート：クライアント側での型安全性を確保
+  export type AppRouter = typeof appRouter;
+  
+  // サーバーサイドでAPIを直接呼び出すため関数
+  export const createCaller = createCallerFactory(appRouter);
+  

@@ -1,68 +1,76 @@
 import Link from "next/link";
-
-import { LatestPost } from "~/app/_components/post";
-import { auth } from "~/server/auth";
-import { HydrateClient, api } from "~/trpc/server";
+import { auth } from "../server/auth";
+import { HydrateClient, api } from "../trpc/server";
+import { LatestPost } from "../app/_components/post";
 
 export default async function Home() {
+	//サーバーサイドでtrpcクエリを実行
 	const hello = await api.post.hello({ text: "from tRPC" });
+	console.log("=== hello ====", hello);
+	//セッション情報を取得
 	const session = await auth();
 
+
 	if (session?.user) {
+		/** prefetch() は、tRPCのヘルパーメソッドです。クライアントサイドで使うuseQuery や useMutationのようなものです。
+			prefetch はfetchと違って結果をスローしません。 その代わりに、prefetch はクエリをキャッシュに追加し、それをハイドレートしてクライアントに送信します。
+			voidは、この操作の結果を無視することを示しています（prefetchは副作用として扱われます）。 */
 		void api.post.getLatest.prefetch();
 	}
 
 	return (
+		//サーバサイドでフェッチされたデータをクライアントサイドへ渡すためのHydrateClientコンポーネントでラップ
 		<HydrateClient>
-			<main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-				<div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-					<h1 className="font-extrabold text-5xl tracking-tight sm:text-[5rem]">
-						Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
-					</h1>
-					<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-						<Link
-							className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-							href="https://create.t3.gg/en/usage/first-steps"
-							target="_blank"
-						>
-							<h3 className="font-bold text-2xl">First Steps →</h3>
-							<div className="text-lg">
-								Just the basics - Everything you need to know to set up your
-								database and authentication.
-							</div>
-						</Link>
-						<Link
-							className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-							href="https://create.t3.gg/en/introduction"
-							target="_blank"
-						>
-							<h3 className="font-bold text-2xl">Documentation →</h3>
-							<div className="text-lg">
-								Learn more about Create T3 App, the libraries it uses, and how
-								to deploy it.
-							</div>
-						</Link>
-					</div>
-					<div className="flex flex-col items-center gap-2">
-						<p className="text-2xl text-white">
-							{hello ? hello.greeting : "Loading tRPC query..."}
-						</p>
-
-						<div className="flex flex-col items-center justify-center gap-4">
-							<p className="text-center text-2xl text-white">
-								{session && <span>Logged in as {session.user?.name}</span>}
-							</p>
-							<Link
-								href={session ? "/api/auth/signout" : "/api/auth/signin"}
-								className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
-							>
-								{session ? "Sign out" : "Sign in"}
-							</Link>
-						</div>
-					</div>
-
-					{session?.user && <LatestPost />}
+			<main className="flex min-h-screen flex-col items-center justify-between bg-gray-100 px-4 py-6">
+				{/* Discover Header */}
+				<div className="text-center mb-4">
+					<h2 className="text-lg font-semibold text-gray-700">Discover</h2>
+					<p className="text-sm text-gray-500">Chicago, IL</p>
 				</div>
+
+				{/* Profile Card */}
+				<div className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-lg bg-white">
+					<img
+						src="/demo_pictures/tomcruise_1.jpg"
+						alt="Jessica Parker"
+						className="w-full h-96 object-cover"
+					/>
+					<div className="absolute top-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full">
+						1 km
+					</div>
+					<div className="p-4">
+						<h3 className="text-lg font-semibold">Jessica Parker, 23</h3>
+						<p className="text-sm text-gray-500">Professional model</p>
+					</div>
+				</div>
+
+				{/* Action Buttons */}
+				<div className="flex justify-center items-center gap-6 mt-6">
+					<button className="bg-white shadow-md w-14 h-14 rounded-full flex items-center justify-center text-red-500 text-2xl">
+						&#10005;
+					</button>
+					<button className="bg-pink-500 shadow-md w-16 h-16 rounded-full flex items-center justify-center text-white text-3xl">
+						&#10084;
+					</button>
+					<button className="bg-white shadow-md w-14 h-14 rounded-full flex items-center justify-center text-purple-500 text-xl">
+						&#9733;
+					</button>
+				</div>
+
+				{/* Bottom Navigation with Notification */}
+				<nav className="w-full max-w-sm mt-8 flex justify-around text-gray-400 text-2xl relative">
+					<span>&#128465;</span> {/* Trash */}
+					<span>&#128269;</span> {/* Search */}
+					<span>&#9829;</span>     {/* Heart */}
+					<span>&#128100;</span>   {/* Person */}
+					
+					{/* Notification Icon with Badge */}
+					<div className="relative">
+						<span>&#128276;</span> {/* Bell */}
+						<div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
+					</div>
+				</nav>
+				{session?.user && <LatestPost />}
 			</main>
 		</HydrateClient>
 	);

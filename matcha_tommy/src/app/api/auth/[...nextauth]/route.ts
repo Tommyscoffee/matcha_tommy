@@ -1,6 +1,6 @@
 import NextAuth, { type User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { db } from "~/server/db";
+import { db } from "~/src/server/db";
 import { AdapterUser } from "next-auth/adapters";
 const handler = NextAuth({
   providers: [

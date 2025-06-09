@@ -13,8 +13,8 @@ import { z, ZodError } from "zod";
 import { type CreateNextContextOptions } from "@trpc/server/adapters/next";
 import { type Session } from "next-auth";
 
-import { auth } from "~/server/auth";
-import { db } from "~/server/db";
+import { auth } from "~/src/server/auth";
+import { db } from "~/src/server/db";
 
 /**
  * 1. CONTEXT
