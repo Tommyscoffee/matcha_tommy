@@ -57,19 +57,7 @@ export default async function Home() {
 					</button>
 				</div>
 
-				{/* Bottom Navigation with Notification */}
-				<nav className="w-full max-w-sm mt-8 flex justify-around text-gray-400 text-2xl relative">
-					<span>&#128465;</span> {/* Trash */}
-					<span>&#128269;</span> {/* Search */}
-					<span>&#9829;</span>     {/* Heart */}
-					<span>&#128100;</span>   {/* Person */}
-					
-					{/* Notification Icon with Badge */}
-					<div className="relative">
-						<span>&#128276;</span> {/* Bell */}
-						<div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
-					</div>
-				</nav>
+
 				{session?.user && <LatestPost />}
 			</main>
 		</HydrateClient>

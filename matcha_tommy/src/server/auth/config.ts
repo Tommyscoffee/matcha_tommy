@@ -43,6 +43,9 @@ export const authConfig = {
 		 * @see https://next-auth.js.org/providers/github
 		 */
 	],
+	pages: {
+		signIn: "/registration/login",//にsん方されなければログインページに遷移させたい。
+	},
 	adapter: PrismaAdapter(db),
 	callbacks: {
 		session: ({ session, user }) => ({
@@ -52,5 +55,12 @@ export const authConfig = {
 				id: user.id,
 			},
 		}),
+		authorized: async ({ auth, request: {nextUrl} }) => {
+			
+			if (!auth?.user) {
+				return false;
+			}
+			return true;
+		},
 	},
 } satisfies NextAuthConfig;

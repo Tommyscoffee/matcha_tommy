@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 
 import { TRPCReactProvider } from "~/src/trpc/react";
+import Header from "./_components/Header";
+import Footer from "./_components/Footer";
 
 export const metadata: Metadata = {
 	title: "Create T3 App",
@@ -21,9 +23,15 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
 	return (
 		<html lang="en" className={`${geist.variable}`}>
-			<body>
+			<body className="flex flex-col min-h-screen w-screen">
+				<Header />
+				<main className="flex-grow flex items-center justify-center w-full px-4 bg-gray-100">
+      				<TRPCReactProvider>{children}</TRPCReactProvider>
+    			</main>
 				{/* このコンポーネントでアプリケーション全体をラップすることにより、tPRCクライアントが利用可能になり、全てのコンポーネントでtrpcのクエリやミューテーションを使用できるようになる。 */}
-				<TRPCReactProvider>{children}</TRPCReactProvider>
+				{/* <TRPCReactProvider>{children}</TRPCReactProvider> */}
+				{/* <Footer /> */}
+				<Footer />
 			</body>
 		</html>
 	);
