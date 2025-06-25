@@ -18,17 +18,21 @@ export async function generateUniqueVerificationToken() {
   let exists = true;
   while (exists) {
     token = generateVerificationToken();
+    console.log("--token", token);
     const rows = await db.query(
-      "SELECT * FROM verification_tokens WHERE token = ?",
+      "SELECT * FROM verification_tokens WHERE token = '?'",
       [token]
     ) as any[];
+    console.log("--rows", rows);
     exists = rows.length > 0;
   }
+  console.log("--token", token);
   return token;
 } 
 
 // トークン保存（verification_tokensテーブルに保存）
 export async function saveVerificationToken(userId: number, token: string, expiresInMinutes = 30) {
+  console.log("--saveVerificationToken", userId, token, expiresInMinutes);
   const expiresAt = new Date(Date.now() + expiresInMinutes * 60 * 1000);
   await db.query(
     "INSERT INTO verification_tokens (user_id, token, expires_at) VALUES (?, ?, ?)",
@@ -38,13 +42,16 @@ export async function saveVerificationToken(userId: number, token: string, expir
 
 // トークン検証＆ユーザー認証状態更新
 export async function verifyEmailByToken(token: string) {
+  console.log("--verifyEmailByToken", token);
   // トークン検索
   const rows = await db.query(
     "SELECT * FROM verification_tokens WHERE token = ? AND expires_at > NOW()",
     [token]
   ) as any[];
+  console.log("--rows", rows);
   const row = rows[0];
-  if (!row || rows.length !== 0) throw new Error("Invalid or expired token");
+  if (!row || rows.length === 0) throw new Error("Invalid or expired token");
+  console.log("--row", row);
 
   // ユーザー認証済みに
   await db.query(
@@ -57,6 +64,14 @@ export async function verifyEmailByToken(token: string) {
     "UPDATE verification_tokens SET expires_at = NOW() WHERE id = ?",
     [row.id]
   );
-  return true;
+
+  // ユーザー情報を返す
+  const user = await db.query("select * from users where id = ?", [row.user_id]) as any[];
+  return user[0];
+}
+
+function generateRandomUserId() {
+  // 100000〜999999の6桁ランダム
+  return Math.floor(100000 + Math.random() * 900000);
 }
 

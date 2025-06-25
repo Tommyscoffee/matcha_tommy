@@ -1,18 +1,19 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { api } from "../../../trpc/react"; // ←パスはプロジェクト構成に合わせて
+import { useRouter } from "next/navigation";
 
 export default function EmailRegisterPage() {
   const [email, setEmail] = useState("");
+  const createTempUserMutation = api.auth.createTempUser.useMutation();
   const sendVerificationEmail = api.sendMail.sendVerification.useMutation();
+  const router = useRouter();
 
   useEffect(() => {
     console.log("email", email);
   }, [email]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("handleSubmit");
     /**
      * JSのイベントオブジェクトのデフォルトの挙動をキャンセルする
      * フォーム送信のデフォルト挙動とは？
@@ -24,13 +25,32 @@ export default function EmailRegisterPage() {
       •	submit 時にページがリロードされて状態が初期化される
       •	入力したメールや処理中のロジックもリセットされてしまう */
 
-    // メール送信処理をここに実装
-    try {
-      await sendVerificationEmail.mutateAsync({ email });
-      alert("認証メールを送信しました");
-    } catch (err) {
-      alert("メール送信に失敗しました");
+    e.preventDefault();
+    if (!email) {
+      alert("メールアドレスを入力してください");
+      return;
     }
+    try {
+      // 2. まず、仮ユーザーを作成するAPIを呼び出す
+      console.log("Creating user...");
+      const { userId } = await createTempUserMutation.mutateAsync({ email });
+      console.log("User created with ID:", userId, email);
+      
+      // 3. 次に、メール送信APIを呼び出す
+      await sendVerificationEmail.mutateAsync({ email });
+      
+      alert("認証メールを送信しました。メールを確認してください。");
+      
+      // 4. 次のページ（メール認証コード入力ページ）に遷移
+      router.push(`/sign-up/verify-email?email=${encodeURIComponent(email)}`);
+
+    } catch (error: any) {
+      console.error("エラーが発生しました:", error);
+      // エラーメッセージをユーザーに分かりやすく表示
+      alert(error.message || "処理中にエラーが発生しました。");
+    }
+    console.log("handleSubmit");
+    
   };
 
   return (

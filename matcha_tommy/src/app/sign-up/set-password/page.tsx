@@ -7,6 +7,7 @@ const commonWords = [
   "password", "123456", "qwerty", "letmein", "welcome", "monkey", "abc123", "iloveyou"
 ];
 
+
 function isCommonWord(pw: string) {
   return commonWords.some(word => pw.toLowerCase().includes(word));
 }
@@ -22,7 +23,7 @@ export default function RegisterPage() {
 
   const isCommon = isCommonWord(password);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (password !== confirm) {
@@ -34,6 +35,11 @@ export default function RegisterPage() {
       return;
     }
     // ここで登録API呼び出し
+    try {
+      await createUserMutation.mutateAsync({ email, password });
+    } catch (error: any) {
+      setError(error.message || "登録に失敗しました");
+    }
   };
 
   return (

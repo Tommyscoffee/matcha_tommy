@@ -1,12 +1,34 @@
 "use client";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-
+import { api } from "~/src/trpc/react";
+import type { User } from "~/src/types/users";
 export default function VerifyEmailPage() {
   const [code, setCode] = useState("");
+  const verifyEmailMutation = api.auth.verifyEmail.useMutation();
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // 認証コード送信処理をここに実装
+    if (!code) {
+      alert("認証コードを入力してください");
+      return;
+    }
+    try {
+      console.log("verifyEmailMutation1", code);
+      const response:User = await verifyEmailMutation.mutateAsync({ token: code });
+      const userEmail = response.email; // サーバー側で返すようにしておく必要あり
+      alert("メール認証が完了しました。ログインしてください。");
+      // 4. 次のページ（メール認証コード入力ページ）に遷移
+      router.push(`/sign-up/set-password?email=${encodeURIComponent(userEmail)}`);
+      
+    } catch (error: any) {
+      console.error("エラーが発生しました:", error);
+      // エラーメッセージをユーザーに分かりやすく表示
+      alert(error.message || "処理中にエラーが発生しました。");
+    }
+    console.log("handleSubmit");
   };
 
   return (
