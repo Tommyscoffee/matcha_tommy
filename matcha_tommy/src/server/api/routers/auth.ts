@@ -2,7 +2,7 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { verifyEmailByToken, generateUniqueVerificationToken, saveVerificationToken } from "../../auth/emailVerification";
-import { createTempUser } from "../../auth/createUser";
+import { createTempUser, createUser } from "../../auth/createUser";
 import type { User } from "~/src/types/users";
 // [ server/auth/ ]  ← 認証の仕組み・設定・ヘルパー
 //         ↑
@@ -34,5 +34,12 @@ export const authRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const user = await verifyEmailByToken(input.token);
       return user as User;
+    }),
+
+    createUser: publicProcedure
+    .input(z.object({ email: z.string().email() , password: z.string().min(8, "Password must be at least 8 characters")}))
+    .mutation(async ({ input }) => {
+      const userId = await createUser(input.email, input.password);
+      return { userId };
     }),
 });

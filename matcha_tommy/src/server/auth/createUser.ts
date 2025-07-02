@@ -30,24 +30,26 @@ export async function createTempUser(email: string): Promise<number> {
   return result.insertId;
 }
 
-export async function createUser(email: string, password: string): Promise<number> {
+export async function createUser(email: string, password: string): Promise<void> {
   console.log("createUser1", email);
   // 1. ユーザーが既に存在するかチェック
   const existingUsers = await db.query("SELECT id FROM users WHERE email = ?", [email]) as { id: number }[];
   console.log("createUser1: existingUsers", existingUsers);
-  if (existingUsers.length > 0) {
+  if (existingUsers.length <= 0) {
     // 既に仮登録済みの場合は、そのIDを返すか、エラーとする
     // ここではエラーとして処理します
-    throw new Error("このメールアドレスは既に使用されています。");
+    throw new Error("このメールアドレスでの仮登録されたユーザはいません。");
   }
   console.log("createUser2", email);
   // 2. パスワードをハッシュ化
   const hashedPassword = await bcrypt.hash(password, 10);
   console.log("createUser3 email", email);
   console.log("createUser3 bashedPassword", hashedPassword);
-  // 3. 'id'を指定せずにINSERTを実行
+  // 3. 仮ユーザのpasswordを更新する
   const result = await db.query(
     "UPDATE users SET password_hash = ? WHERE email = ?",
     [hashedPassword,email]
   ) as any;
+  return result
+
 }

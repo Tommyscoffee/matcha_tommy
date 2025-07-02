@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { api } from "~/src/trpc/react";
 
 // 簡易的な一般的英単語リスト（実際はもっと多くてもOK）
 const commonWords = [
@@ -15,6 +16,7 @@ function isCommonWord(pw: string) {
 export default function RegisterPage() {
   const searchParams = useSearchParams();
   // verify-emailページからemailをクエリで受け取る想定
+  const createUserMutation = api.auth.createUser.useMutation();
   const email = searchParams.get("email") || "xxxxxxxx.com（登録email）";
 
   const [password, setPassword] = useState("");
@@ -26,8 +28,13 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
     if (password !== confirm) {
       setError("パスワードが一致しません");
+      return;
+    }
+    if (password.length < 8){
+      setError("パスワードは8文字以上入力必要があります")
       return;
     }
     if (isCommon) {
@@ -36,6 +43,8 @@ export default function RegisterPage() {
     }
     // ここで登録API呼び出し
     try {
+      console.log("=== email", email);
+      console.log("== password",password);
       await createUserMutation.mutateAsync({ email, password });
     } catch (error: any) {
       setError(error.message || "登録に失敗しました");
@@ -78,7 +87,7 @@ export default function RegisterPage() {
         />
         <input
           type="password"
-          placeholder="新たなパスワード"
+          placeholder="新たなパスワード(8文字以上)"
           value={password}
           onChange={e => setPassword(e.target.value)}
           style={{
