@@ -1,13 +1,27 @@
 "use client";
 import React, { useState } from "react";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // ログイン処理をここに実装
+    setError("");
+    const res = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+    });
+    if (res?.ok) {
+      router.push("/discover");
+    } else {
+      setError("メールアドレスまたはパスワードが正しくありません");
+    }
   };
 
   return (
@@ -71,6 +85,7 @@ export default function LoginPage() {
           Login
         </button>
       </form>
+      {error && <div style={{ color: "#e74c5a", marginTop: 16, textAlign: "center" }}>{error}</div>}
     </div>
   );
 } 

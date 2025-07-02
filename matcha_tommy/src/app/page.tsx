@@ -9,6 +9,7 @@ export default async function Home() {
 	console.log("=== hello ====", hello);
 	//セッション情報を取得
 	const session = await auth();
+	console.log("=== session ====", session);
 
 
 	if (session?.user) {

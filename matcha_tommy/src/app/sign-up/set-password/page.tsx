@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { api } from "~/src/trpc/react";
+import { useRouter } from "next/navigation";
 
 // 簡易的な一般的英単語リスト（実際はもっと多くてもOK）
 const commonWords = [
@@ -15,6 +16,7 @@ function isCommonWord(pw: string) {
 
 export default function RegisterPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   // verify-emailページからemailをクエリで受け取る想定
   const createUserMutation = api.auth.createUser.useMutation();
   const email = searchParams.get("email") || "xxxxxxxx.com（登録email）";
@@ -46,6 +48,9 @@ export default function RegisterPage() {
       console.log("=== email", email);
       console.log("== password",password);
       await createUserMutation.mutateAsync({ email, password });
+      alert("ユーザー登録が完了しました。次のページでログインをお願いいたします");
+      // 4. 次のページ（メール認証コード入力ページ）に遷移
+      router.push(`/login`);
     } catch (error: any) {
       setError(error.message || "登録に失敗しました");
     }
