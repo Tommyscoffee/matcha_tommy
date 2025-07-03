@@ -18,8 +18,8 @@ export async function createTempUser(email: string): Promise<number> {
   console.log("createUser3", email);
   // 3. 'id'を指定せずにINSERTを実行
   const result = await db.query(
-    "INSERT INTO users (email, username, password_hash, first_name, last_name, gender, sexual_preference, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    [email, tempUsername, tempPassword, 'temp', 'temp', 'other', 'both', false] // is_verified: falseで仮登録
+    "INSERT INTO users (email, username, password_hash, birth_date, first_name, last_name, gender, sexual_preference, is_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    [email, tempUsername, tempPassword, '9999-01-01', 'temp', 'temp', 'other', 'both', false] // is_verified: falseで仮登録
   ) as any;
   console.log("createUser4", email);
 
