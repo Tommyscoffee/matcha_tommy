@@ -15,6 +15,11 @@ If you are not familiar with the different technologies used in this project, pl
 - [Tailwind CSS](https://tailwindcss.com)
 - [tRPC](https://trpc.io)
 
+# How to set up DB
+1. MySQLサーバーを起動
+2. .envファイルでDB接続情報を設定
+3. schema.sqlを実行
+
 ## Learn More
 
 To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
