@@ -1,9 +1,12 @@
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import type { NextRequest } from "next/server";
+import type { NextRequest, NextResponse } from "next/server";
 
 import { env } from "~/src/env";
 import { appRouter } from "~/src/server/api/root";
 import { createTRPCContext } from "~/src/server/api/trpc";
+import  getServerSession  from "next-auth";
+import { authConfig } from "~/src/server/auth/config";
+// import { NextAuthConfig } from "next-auth";
 
 /**
  * This wraps the `createTRPCContext` helper and provides the required context for the tRPC API when
@@ -11,11 +14,13 @@ import { createTRPCContext } from "~/src/server/api/trpc";
  */
 // リクエストごとのtrpcコンテキストを作成する関数
 //これでヘッダー情報を含むことで、認証情報などをtrpcプロシージャ内で使用できるようにしている。
-const createContext = async (req: NextRequest) => {
-	return createTRPCContext({
+export async function createContext( req: NextRequest, res: NextResponse ) {
+	const session = await getServerSession(authConfig);
+	return {
 		headers: req.headers,
-	});
-};
+		session, // ここにuser.idやuser.emailが入る
+	};
+}
 
 // trpcリクエストを処理するハンドラー関数
 const handler = (req: NextRequest) =>
@@ -24,7 +29,7 @@ const handler = (req: NextRequest) =>
 		endpoint: "/api/trpc",
 		req,
 		router: appRouter,
-		createContext: () => createContext(req),
+		createContext: () => createTRPCContext({ headers: req.headers }),
 		onError:
 			env.NODE_ENV === "development"
 				? ({ path, error }) => {

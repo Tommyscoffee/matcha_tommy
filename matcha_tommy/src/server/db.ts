@@ -1,10 +1,14 @@
 import { env } from "~/src/env";
 import mysql from "mysql2/promise";
+import type { Connection } from "mysql2/promise";
 
 /**
  * データベースの初期化とテーブル作成を行う関数
  */
 export const initializeDatabase = async () => {
+	// まず、データベースが存在しない場合は作成する
+	await createDatabaseIfNotExists();
+	
 	const connection = await createConnection();
 	try {
 		// テーブル作成のSQL
@@ -118,7 +122,7 @@ export const initializeDatabase = async () => {
 				id INT AUTO_INCREMENT PRIMARY KEY,
 				user_id INT NOT NULL,
 				token VARCHAR(255) NOT NULL,
-				expires_at DATETIME NOT NULL,
+				expired_at DATETIME NOT NULL,
 				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 				FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 			);
@@ -128,7 +132,7 @@ export const initializeDatabase = async () => {
 				id INT AUTO_INCREMENT PRIMARY KEY,
 				user_id INT NOT NULL,
 				token VARCHAR(255) NOT NULL,
-				expires_at DATETIME NOT NULL,
+				expired_at DATETIME NOT NULL,
 				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 				FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 			);
@@ -139,6 +143,29 @@ export const initializeDatabase = async () => {
 		console.log("Database tables created successfully");
 	} catch (error) {
 		console.error("Error creating database tables:", error);
+		throw error;
+	} finally {
+		await closeConnection(connection);
+	}
+};
+
+/**
+ * データベースが存在しない場合は作成する関数
+ */
+export const createDatabaseIfNotExists = async () => {
+	const connection = await mysql.createConnection({
+		host: env.DB_HOST_LOCAL,
+		user: env.DB_USER,
+		password: env.DB_PASSWORD,
+		// データベース名を指定しないで接続
+	});
+	
+	try {
+		// データベースが存在しない場合は作成
+		await connection.query(`CREATE DATABASE IF NOT EXISTS ${env.DB_NAME}`);
+		console.log(`Database '${env.DB_NAME}' created or already exists`);
+	} catch (error) {
+		console.error("Error creating database:", error);
 		throw error;
 	} finally {
 		await closeConnection(connection);
@@ -164,7 +191,7 @@ export const createConnection = async () => {
  * DB接続を閉じる関数
  * @param connection 閉じる接続オブジェクト
  */
-export const closeConnection = async (connection: mysql.Connection) => {
+export const closeConnection = async (connection: Connection) => {
 	await connection.end();
 };
 
@@ -177,7 +204,7 @@ export const closeConnection = async (connection: mysql.Connection) => {
 export const executeQuery = async <T>(query: string, params?: any[]): Promise<T> => {
 	const connection = await createConnection();
 	try {
-		const [results] = await connection.execute(query, params);
+		const [results] = await connection.query(query, params);
 		return results as T;
 	} finally {
 		await closeConnection(connection);

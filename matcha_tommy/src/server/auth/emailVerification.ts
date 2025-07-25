@@ -20,7 +20,7 @@ export async function generateUniqueVerificationToken() {
     token = generateVerificationToken();
     console.log("--token", token);
     const rows = await db.query(
-      "SELECT * FROM verification_tokens WHERE token = '?'",
+      "SELECT * FROM verification_tokens WHERE token = ?",
       [token]
     ) as any[];
     console.log("--rows", rows);
@@ -35,7 +35,7 @@ export async function saveVerificationToken(userId: number, token: string, expir
   console.log("--saveVerificationToken", userId, token, expiresInMinutes);
   const expiresAt = new Date(Date.now() + expiresInMinutes * 60 * 1000);
   await db.query(
-    "INSERT INTO verification_tokens (user_id, token, expires_at) VALUES (?, ?, ?)",
+    "INSERT INTO verification_tokens (user_id, token, expired_at) VALUES (?, ?, ?)",
     [userId, token, expiresAt]
   );
 }
@@ -45,7 +45,7 @@ export async function verifyEmailByToken(token: string) {
   console.log("--verifyEmailByToken", token);
   // トークン検索
   const rows = await db.query(
-    "SELECT * FROM verification_tokens WHERE token = ? AND expires_at > NOW()",
+    "SELECT * FROM verification_tokens WHERE token = ? AND expired_at > NOW()",
     [token]
   ) as any[];
   console.log("--rows", rows);
@@ -61,7 +61,7 @@ export async function verifyEmailByToken(token: string) {
   
   // トークン削除(論理削除)
   await db.query(
-    "UPDATE verification_tokens SET expires_at = NOW() WHERE id = ?",
+    "UPDATE verification_tokens SET expired_at = NOW() WHERE id = ?",
     [row.id]
   );
 

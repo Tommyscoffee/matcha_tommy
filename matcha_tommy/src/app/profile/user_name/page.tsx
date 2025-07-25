@@ -1,23 +1,49 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useProfile } from "~/src/context/ProfileContext";
 
 export default function UserNamePage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [birthday, setBirthday] = useState("");
+  const [username, setUsername] = useState("");
 
   const [error, setError] = useState("");
   const router = useRouter();
+  const profileContext = useProfile();
+  const { user, setUser } = profileContext || {};
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!firstName.trim() || !lastName.trim()) {
-      setError("ユーザー名を入力してください");
+    if (!username.trim() || !firstName.trim() || !lastName.trim()) {
+      setError("ニックネームとユーザー名を入力してください");
       return;
     }
-    // ここでAPI保存処理などを追加可能
-    router.push("/profile"); // 次のステップに遷移（仮）
+    
+    if (!setUser || !user) {
+      setError("プロフィールコンテキストが見つかりません");
+      return;
+    }
+    
+    // Contextにデータを保存
+    setUser({
+      email: user.email || "",
+      username: username.trim(),
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      birth_date: birthday,
+      images: user.images || [],
+      interests: user.interests || [],
+      gender: user.gender || "",
+      sexual_preference: user.sexual_preference || "",
+      biography: user.biography || "",
+      latitude: user.latitude || "",
+      longitude: user.longitude || "",
+    });
+    
+    console.log("Saved to context:", { username, firstName, lastName, birthday });
+    router.push("/profile/gender");
   };
 
   return (
@@ -35,6 +61,20 @@ export default function UserNamePage() {
     }}>
       <h2 style={{ fontSize: 28, fontWeight: 600, marginBottom: 24, textAlign: "center" }}>ユーザー名を入力</h2>
       <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+        <input
+          type="text"
+          placeholder="Nickname (ユーザーネーム)"
+          value={username}
+          onChange={e => setUsername(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "12px",
+            borderRadius: 8,
+            border: "1px solid #ddd",
+            marginBottom: 16,
+            fontSize: 16
+          }}
+        />
         <input
           type="text"
           placeholder="First Name"

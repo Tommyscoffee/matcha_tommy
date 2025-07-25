@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 export default function EmailRegisterPage() {
   const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
   const createTempUserMutation = api.auth.createTempUser.useMutation();
   const sendVerificationEmail = api.sendMail.sendVerification.useMutation();
   const router = useRouter();
@@ -26,8 +27,15 @@ export default function EmailRegisterPage() {
       •	入力したメールや処理中のロジックもリセットされてしまう */
 
     e.preventDefault();
+    setError("");
     if (!email) {
-      alert("メールアドレスを入力してください");
+      setError("メールアドレスを入力してください");
+      return;
+    }
+    // メール形式のバリデーション
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("正しいメールアドレス形式で入力してください");
       return;
     }
     try {
@@ -66,15 +74,16 @@ export default function EmailRegisterPage() {
             placeholder="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-gray-300 mb-10 text-lg focus:outline-none focus:ring-2 focus:ring-[#e74c5a]"
+            className="w-full px-4 py-3 rounded-xl border border-gray-300 mb-4 text-lg focus:outline-none focus:ring-2 focus:ring-[#e74c5a]"
             required
           />
+          {error && <div className="w-full text-left text-[#e74c5a] mb-6 text-sm">{error}</div>}
           <button
             type="submit"
             className="w-full bg-[#e74c5a] text-white font-bold font-serif text-lg py-4 rounded-2xl mt-2 transition-colors duration-200 hover:bg-[#d13b4a]"
-            disabled={sendVerificationEmail.isLoading}
+            disabled={sendVerificationEmail.status === 'pending'}
           >
-            {sendVerificationEmail.isLoading ? "送信中..." : "send Email"}
+            {sendVerificationEmail.status === 'pending' ? "送信中..." : "send Email"}
           </button>
         </form>
       </div>

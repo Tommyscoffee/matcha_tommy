@@ -2,6 +2,7 @@ import "~/src/styles/globals.css";
 
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import { SessionProvider } from "next-auth/react";
 
 import { TRPCReactProvider } from "~/src/trpc/react";
 import Header from "./_components/Header";
@@ -24,14 +25,13 @@ export default function RootLayout({
 	return (
 		<html lang="en" className={`${geist.variable}`}>
 			<body className="flex flex-col min-h-screen w-screen">
-				<Header />
-				<main className="flex-grow flex items-center justify-center w-full px-4 bg-gray-100">
-      				<TRPCReactProvider>{children}</TRPCReactProvider>
-    			</main>
-				{/* このコンポーネントでアプリケーション全体をラップすることにより、tPRCクライアントが利用可能になり、全てのコンポーネントでtrpcのクエリやミューテーションを使用できるようになる。 */}
-				{/* <TRPCReactProvider>{children}</TRPCReactProvider> */}
-				{/* <Footer /> */}
-				<Footer />
+				<SessionProvider>
+					<Header />
+					<main className="flex-grow flex items-center justify-center w-full px-4 bg-gray-100">
+						<TRPCReactProvider>{children}</TRPCReactProvider>
+					</main>
+					<Footer />
+				</SessionProvider>
 			</body>
 		</html>
 	);

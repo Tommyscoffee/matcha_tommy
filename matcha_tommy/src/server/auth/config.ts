@@ -1,8 +1,9 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { DefaultSession, NextAuthConfig } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
+import CredentialsProvider from "next-auth/providers/credentials";
 
 import { db } from "~/src/server/db";
+import { MySQLAdapter } from "./mysql-adapter";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -32,29 +33,65 @@ declare module "next-auth" {
  */
 export const authConfig = {
 	providers: [
-		DiscordProvider,
-		/**
-		 * ...add more providers here.
-		 *
-		 * Most other providers require a bit more work than the Discord provider. For example, the
-		 * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-		 * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-		 *
-		 * @see https://next-auth.js.org/providers/github
-		 */
+		CredentialsProvider({
+			id: "credentials",
+			name: "Credentials",
+			credentials: {
+				email: { label: "Email", type: "email" },
+				password: { label: "Password", type: "password" }
+			},
+			async authorize(credentials) {
+				if (!credentials?.email || !credentials?.password) {
+					return null;
+				}
+
+				const users = await db.query(
+					"SELECT * FROM users WHERE email = ?",
+					[credentials.email]
+				) as any[];
+
+				if (!users.length) {
+					return null;
+				}
+
+				const user = users[0];
+				// ここでパスワード検証を行う（bcrypt.compare等）
+				// 簡易的にパスワードが一致するかチェック
+				if (user.password_hash === credentials.password) {
+					return {
+						id: user.id.toString(),
+						email: user.email,
+						name: user.first_name + " " + user.last_name,
+					};
+				}
+
+				return null;
+			}
+		}),
 	],
 	pages: {
-		signIn: "/registration/login",//にsん方されなければログインページに遷移させたい。
+		signIn: "/login",
 	},
-	adapter: PrismaAdapter(db),
+	adapter: MySQLAdapter(),
+	session: {
+		strategy: "jwt",
+		maxAge: 30 * 24 * 60 * 60, // 30 days
+	},
+	secret: process.env.NEXTAUTH_SECRET || "matcha-tommy-secret-key-2024-development-only",
 	callbacks: {
-		session: ({ session, user }) => ({
+		session: ({ session, token }) => ({
 			...session,
 			user: {
 				...session.user,
-				id: user.id,
+				id: token.sub,
 			},
 		}),
+		jwt: ({ token, user }) => {
+			if (user) {
+				token.id = user.id;
+			}
+			return token;
+		},
 		authorized: async ({ auth, request: {nextUrl} }) => {
 			
 			if (!auth?.user) {
